@@ -36,8 +36,9 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 // mian
 int main(int argc, char ** argv)
 {
+std::cout << "HEREE!!!";
 	// initialising the node
-	ros::init(argc, argv, "server");
+	ros::init(argc, argv, "service");
 	// defininf a node handle
 	ros::NodeHandle nh;
 	// advertise the service and call the function
