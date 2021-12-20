@@ -100,8 +100,6 @@
   </node>
   
   <!-- Run the teleop_twist_keyboard node -->
-  <node name="circuitcontroller_node" pkg="second_assignment" type="circuitcontroller_node" output="screen"/>
-  
   <!-- Run the service node -->
   <node name="service0_node" pkg="final_assignment" type="service0_node" output="screen"/>
   <!-- Run the UI node -->
