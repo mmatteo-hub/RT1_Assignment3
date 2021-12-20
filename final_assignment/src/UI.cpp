@@ -14,6 +14,11 @@ void callBack()
 	// defining a char to use to store the input
 	char inputUsr;
 	
+	// show the menù
+	std::cout << "\n###################### MENU' ######################";
+	std::cout << "\nPress:\n1 to publish a target with (x,y);\n2 to set a target by cursor;\n2 to drive the robot with keyboard;\n0 to stop the program execution.\n";
+	std::cout << "###################################################\n";
+	
 	// getting the keyboard input
 	std::cin >> inputUsr;
 
