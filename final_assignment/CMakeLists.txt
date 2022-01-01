@@ -9,6 +9,7 @@ project(final_assignment)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
+  move_base_msgs
   nav_msgs
   roscpp
   rospy
@@ -74,6 +75,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES
+   move_base_msgs
    geometry_msgs
    nav_msgs
    sensor_msgs

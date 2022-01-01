@@ -1,15 +1,22 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
 #include "final_assignment/Service.h"
+#include "move_base_msgs/MoveBaseGoal.h"
 
 // defining a client
 ros::ServiceClient client;
 
+// define a publisher 
+ros::Publisher pub;
+
 // function to show the menù and give the input
 void callBack()
 {
-	// defining a variable s_srv of type second_assignment::Service
+	// defining a variable s of type final_assignment::Service
 	final_assignment::Service s;
+	
+	// define a variable to publish
+	move_base_msgs::MoveBaseGoal goal;
 	
 	// defining a char to use to store the input
 	char inputUsr;
@@ -21,6 +28,8 @@ void callBack()
 	
 	// getting the keyboard input
 	std::cin >> inputUsr;
+
+	system("clear");
 
 	// put the input on the request of the server
 	s.request.input = inputUsr;
@@ -40,10 +49,11 @@ int main(int argc, char ** argv)
 	// call the service with the client
 	client = nh.serviceClient<final_assignment::Service>("/service");
 	
-	// spin the prorgram in this way since there is no topic to subscribe to to spin with ros::spin()
+	//pub = nh.advertise<move_base_msgs::MoveBaseGoal>("/move_base",1);
+	
+	// spin the prorgram
 	while(ros::ok())
 	{
-		// call the function to show the menù and take the input at each iteration
 		callBack();
 		ros::spinOnce();
 	}
