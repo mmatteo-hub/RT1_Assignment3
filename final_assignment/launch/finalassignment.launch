@@ -96,16 +96,16 @@
     <rosparam file="$(find final_assignment)/param/local_costmap_params.yaml" command="load"/>
     <rosparam file="$(find final_assignment)/param/global_costmap_params.yaml" command="load"/>
     <rosparam file="$(find final_assignment)/param/base_local_planner_params.yaml" command="load"/>
-    <rosparam file="$(find final_assignment)/param/move_base_params.yaml" command="load"/>
+    <rosparam file="$(find final_assignment)/param/move_base_params.yaml" command="load"/>	
   </node>
-  
-  <!-- Run the teleop_twist_keyboard node -->
-  
   
   <!-- Run the service node -->
   <node pkg="final_assignment" type="service0_node" respawn="false" name="service0_node" output="screen" launch-prefix="xterm -e" required="true"/>
  
   <!-- Run the UI node -->
   <node pkg="final_assignment" type="UI0_node" respawn="false" name="UI0_node" output="screen" launch-prefix="xterm -e"/>
+  
+  <!-- Run the teleop_twist_keyboard node -->
+  <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" respawn="false" name="teleop_twist_keyboard" output="screen" launch-prefix="xterm -e"/>
 
 </launch>

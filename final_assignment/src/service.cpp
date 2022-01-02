@@ -5,6 +5,7 @@
 #include "geometry_msgs/Twist.h"
 #include "stdio.h"
 #include "move_base_msgs/MoveBaseActionGoal.h"
+#include "geometry_msgs/PointStamped.h"
 
 // define a publisher 
 ros::Publisher pub;
@@ -12,8 +13,8 @@ ros::Publisher pub;
 // define a variable to publish
 move_base_msgs::MoveBaseActionGoal pose;
 
-//defining the variables to store the input
-float inX,inY;	
+// define a variable to publish
+geometry_msgs::PointStamped poseStamped;
 
 // switch to choose what to do given a certain input
 bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Service::Response &res)
@@ -23,7 +24,10 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 		// publish a position (x,y)
 		case '1':
 			// give some instructions
-			std::cout << "Enter a postiion with the 'x y' format.\nUse a space for distinguishing the coordinates.\nUse a dot . for the decimal (enter i.d even if d=0):";
+			std::cout << "Enter a position with the 'x y' format.\nUse a space for distinguishing the coordinates.\nUse a dot . for decimal coordinates.\nType here: ";
+
+			//defining the variables to store the input
+			float inX,inY;
 
 			// get the value
 			std::cin >> inX >> inY;
@@ -36,15 +40,15 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 			pose.goal.target_pose.header.frame_id = "map";
 			pose.goal.target_pose.pose.orientation.w = 1;
+			
+			// publish the target
+			pub.publish(pose);
 	
-			break;
-		
-		// drive the robot with the move_base topic
-		case '2':
 			break;
 			
 		// drive the robot with the teleop_twist_kwyboard
-		case '3':
+		case '2':
+			
 			break;
 			
 		// kill all nodes
@@ -58,9 +62,6 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			break;
 	}
 	
-	// publish the target
-	pub.publish(pose);
-	
 	return true;
 }
 
@@ -71,7 +72,7 @@ int main(int argc, char ** argv)
 	ros::init(argc, argv, "service");
 	// defininf a node handle
 	ros::NodeHandle nh;
-	// advertise the topic and call the function
+	// advertise the topic
 	pub = nh.advertise<move_base_msgs::MoveBaseActionGoal>("move_base/goal", 1);
 	
 	// advertise the service and call the function
