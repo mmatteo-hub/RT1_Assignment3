@@ -16,15 +16,38 @@ move_base_msgs::MoveBaseActionGoal pose;
 // define a variable to publish
 geometry_msgs::PointStamped poseStamped;
 
+void setPoseParams(float inX, float inY)
+{
+	// set the value (x y) to publish
+	pose.goal.target_pose.pose.position.x = inX;
+	pose.goal.target_pose.pose.position.y = inY;
+			
+	// set the frame_id
+	pose.goal.target_pose.header.frame_id = "map";
+	
+	// set the quaternion module equal to 1
+	pose.goal.target_pose.pose.orientation.w = 1;
+}
+
+void menu()
+{
+	std::cout << "\n###################### INFOS ######################\n";
+	std::cout << "Enter a position with the 'x y' format.\nUse a space for distinguishing the coordinates.\nUse a dot . for decimal coordinates.\n";
+	std::cout << "\nCartesian axes are set positive as follow:\n";
+	std::cout << "\t^\n\t|\n\t|\n\t|\n\t|\n\t°---------->\nO = (0 0)\n";
+	std::cout << "###################################################\n";
+	std::cout << "\nType here: ";
+}
+
 // switch to choose what to do given a certain input
 bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Service::Response &res)
 {
 	switch(req.input)
 	{
-		// publish a position (x,y)
+		// publish a position (x y)
 		case '1':
 			// give some instructions
-			std::cout << "Enter a position with the 'x y' format.\nUse a space for distinguishing the coordinates.\nUse a dot . for decimal coordinates.\nType here: ";
+			menu();
 
 			//defining the variables to store the input
 			float inX,inY;
@@ -34,21 +57,16 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 			system("clear");
 			
-			// set the value to publish
-			pose.goal.target_pose.pose.position.x = inX;
-			pose.goal.target_pose.pose.position.y = inY;
+			// function to set the params
+			setPoseParams(inX,inY);
 			
-			pose.goal.target_pose.header.frame_id = "map";
-			pose.goal.target_pose.pose.orientation.w = 1;
-			
-			// publish the target
+			// publish the target chosen
 			pub.publish(pose);
 	
 			break;
 			
 		// drive the robot with the teleop_twist_kwyboard
 		case '2':
-			
 			break;
 			
 		// kill all nodes
@@ -72,6 +90,7 @@ int main(int argc, char ** argv)
 	ros::init(argc, argv, "service");
 	// defininf a node handle
 	ros::NodeHandle nh;
+	
 	// advertise the topic
 	pub = nh.advertise<move_base_msgs::MoveBaseActionGoal>("move_base/goal", 1);
 	

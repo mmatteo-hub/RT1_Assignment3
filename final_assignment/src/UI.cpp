@@ -9,6 +9,13 @@ ros::ServiceClient client;
 // define a publisher 
 ros::Publisher pub;
 
+void menu()
+{
+	std::cout << "\n###################### MENU' ######################";
+	std::cout << "\nPress:\n1 to publish a target with (x,y);\n2 to drive the robot with keyboard;\n0 to stop the program execution.\n";
+	std::cout << "###################################################\n";
+}
+
 // function to show the menù and give the input
 void callBack()
 {
@@ -22,9 +29,7 @@ void callBack()
 	char inputUsr;
 	
 	// show the menù
-	std::cout << "\n###################### MENU' ######################";
-	std::cout << "\nPress:\n1 to publish a target with (x,y);\n2 to drive the robot with keyboard;\n0 to stop the program execution.\n";
-	std::cout << "###################################################\n";
+	menu();
 	
 	// getting the keyboard input
 	std::cin >> inputUsr;
@@ -46,10 +51,9 @@ int main(int argc, char ** argv)
 	ros::init(argc, argv, "UI");
 	// defining a node handle
 	ros::NodeHandle nh;
+	
 	// call the service with the client
 	client = nh.serviceClient<final_assignment::Service>("/service");
-	
-	//pub = nh.advertise<move_base_msgs::MoveBaseGoal>("/move_base",1);
 	
 	// spin the prorgram
 	while(ros::ok())
