@@ -12,7 +12,7 @@ ros::Publisher pub;
 void menu()
 {
 	std::cout << "\n###################### MENU' ######################";
-	std::cout << "\nPress:\n1 to publish a target with (x,y);\n2 to drive the robot with keyboard;\n0 to stop the program execution.\n";
+	std::cout << "\nPress:\n1 to publish a target with (x,y);\n2 to drive the robot with keyboard;\n3 to delete the current goal;\n0 to stop the program execution.\n";
 	std::cout << "###################################################\n";
 }
 

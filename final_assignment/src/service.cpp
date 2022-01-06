@@ -4,17 +4,26 @@
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/Twist.h"
 #include "stdio.h"
+#include "string.h"
 #include "move_base_msgs/MoveBaseActionGoal.h"
 #include "geometry_msgs/PointStamped.h"
+#include "move_base_msgs/MoveBaseActionFeedback.h"
 
-// define a publisher 
+// define publishers 
 ros::Publisher pub;
+ros::Publisher pubCancel;
 
 // define a variable to publish
 move_base_msgs::MoveBaseActionGoal pose;
 
 // define a variable to publish
 geometry_msgs::PointStamped poseStamped;
+
+// define a string to save the goal id
+std::string goalID;
+
+// define a variable for reading fields of the goal to cancel
+actionlib_msgs::GoalID goalToCancel;
 
 void setPoseParams(float inX, float inY)
 {
@@ -27,6 +36,16 @@ void setPoseParams(float inX, float inY)
 	
 	// set the quaternion module equal to 1
 	pose.goal.target_pose.pose.orientation.w = 1;
+}
+
+void cancelGoal()
+{
+	goalToCancel.id = goalID;
+}
+
+void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
+{
+	goalID = msg -> status.goal_id.id;
 }
 
 void menu()
@@ -69,6 +88,14 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 		case '2':
 			break;
 			
+		// delete the current goal
+		case '3':
+			// call the function to cancel the goal
+			cancelGoal();
+			// publish to cancel
+			pubCancel.publish(goalToCancel);
+			break;
+			
 		// kill all nodes
 		case '0':
 			ros::shutdown();
@@ -94,8 +121,14 @@ int main(int argc, char ** argv)
 	// advertise the topic
 	pub = nh.advertise<move_base_msgs::MoveBaseActionGoal>("move_base/goal", 1);
 	
+	// advertise the topic move_base/cancel
+	pubCancel = nh.advertise<actionlib_msgs::GoalID>("move_base/cancel", 1);
+	
 	// advertise the service and call the function
 	ros::ServiceServer service = nh.advertiseService("/service", setDriveMod);
+	
+	// subscribe to the topic feedback to have the status always available and updated
+	ros::Subscriber sub = nh.subscribe("move_base/feedback", 1, takeStatus);
 	
 	// spin the program
 	ros::spin();
