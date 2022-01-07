@@ -9,8 +9,10 @@
 #include "geometry_msgs/PointStamped.h"
 #include "move_base_msgs/MoveBaseActionFeedback.h"
 
-// define publishers 
+// define publishers:
+// pub for the goal 
 ros::Publisher pub;
+// pub to cancel the goal
 ros::Publisher pubCancel;
 
 // define a variable to publish
@@ -25,9 +27,13 @@ std::string goalID;
 // define a variable for reading fields of the goal to cancel
 actionlib_msgs::GoalID goalToCancel;
 
+// flag to enable the target
+int flag = 0;
+
+// function to set the parameters to the right field of the variable to publish
 void setPoseParams(float inX, float inY)
 {
-	// set the value (x y) to publish
+	// set the value (x y) to the x and y field of the variable pose
 	pose.goal.target_pose.pose.position.x = inX;
 	pose.goal.target_pose.pose.position.y = inY;
 			
@@ -44,6 +50,7 @@ void setPoseParams(float inX, float inY)
 // function to cancel the goal by the user input
 void cancelGoal()
 {
+	// set the goal id to cancel equat to the actual goalID
 	goalToCancel.id = goalID;
 	// publish to cancel
 	pubCancel.publish(goalToCancel);
@@ -52,16 +59,20 @@ void cancelGoal()
 // function to cancel the goal by the timer
 void cancelGoalTimer(const ros::TimerEvent)
 {
+	// set the goal id to cancel equat to the actual goalID
 	goalToCancel.id = goalID;
 	// publish to cancel
 	pubCancel.publish(goalToCancel);
 }
 
+// function to take the status: in particular the actual goal id
 void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 {
+	// set the goalID variable with the value of the actual goal id
 	goalID = msg -> status.goal_id.id;
 }
 
+// menu to display inside the switch
 void menu()
 {
 	std::cout << "\n###################### INFOS ######################\n";
@@ -76,9 +87,12 @@ void menu()
 bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Service::Response &res)
 {
 	switch(req.input)
-	{
+	{	
 		// publish a position (x y)
 		case '1':
+			// set the flag value to 1 to enable the timer creation
+			flag = 1;
+			
 			// give some instructions
 			menu();
 
@@ -97,10 +111,14 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 		// drive the robot with the teleop_twist_kwyboard
 		case '2':
+			
 			break;
 			
 		// delete the current goal
 		case '3':
+			// set the flag value to 1 to enable the timer creation
+			flag = 1;
+			
 			// call the function to cancel the goal
 			cancelGoal();
 			break;
@@ -124,7 +142,7 @@ int main(int argc, char ** argv)
 {
 	// initialising the node
 	ros::init(argc, argv, "service");
-	// defininf a node handle
+	// defining a node handle
 	ros::NodeHandle nh;
 	
 	// advertise the topic
@@ -139,8 +157,16 @@ int main(int argc, char ** argv)
 	// subscribe to the topic feedback to have the status always available and updated
 	ros::Subscriber sub = nh.subscribe("move_base/feedback", 1, takeStatus);
 	
-	// create a timer
-	ros::Timer timer = nh.createTimer(ros::Duration(60.0),cancelGoalTimer);
+	// timer is created inside the main only if the program enters the case 1 and 3 of the setDriveMod function
+	if(flag)
+	{
+		// create a timer and iniziatilse it with 1 minute counter
+		ros::Timer timer = nh.createTimer(ros::Duration(60.0),cancelGoalTimer);
+	}
+	
+	// set the value to 0 again to avoid the creation of another timer before the necessary
+	// in this way every time the program enters the case 1 or 3 the timer is re-created starting again the 1 minute counter
+	flag = 0;
 	
 	// spin the program
 	ros::spin();

@@ -9,6 +9,7 @@ ros::ServiceClient client;
 // define a publisher 
 ros::Publisher pub;
 
+// menu to show inside the main
 void menu()
 {
 	std::cout << "\n###################### MENU' ######################";
@@ -56,6 +57,7 @@ int main(int argc, char ** argv)
 	client = nh.serviceClient<final_assignment::Service>("/service");
 	
 	// spin the prorgram
+	// ros::spin() not used since there is not a topic to subscribe to which enables the spin mode
 	while(ros::ok())
 	{
 		callBack();
