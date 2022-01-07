@@ -36,11 +36,25 @@ void setPoseParams(float inX, float inY)
 	
 	// set the quaternion module equal to 1
 	pose.goal.target_pose.pose.orientation.w = 1;
+	
+	// publish the target chosen
+	pub.publish(pose);
 }
 
+// function to cancel the goal by the user input
 void cancelGoal()
 {
 	goalToCancel.id = goalID;
+	// publish to cancel
+	pubCancel.publish(goalToCancel);
+}
+
+// function to cancel the goal by the timer
+void cancelGoalTimer(const ros::TimerEvent)
+{
+	goalToCancel.id = goalID;
+	// publish to cancel
+	pubCancel.publish(goalToCancel);
 }
 
 void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
@@ -78,9 +92,6 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 			// function to set the params
 			setPoseParams(inX,inY);
-			
-			// publish the target chosen
-			pub.publish(pose);
 	
 			break;
 			
@@ -92,8 +103,6 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 		case '3':
 			// call the function to cancel the goal
 			cancelGoal();
-			// publish to cancel
-			pubCancel.publish(goalToCancel);
 			break;
 			
 		// kill all nodes
@@ -129,6 +138,9 @@ int main(int argc, char ** argv)
 	
 	// subscribe to the topic feedback to have the status always available and updated
 	ros::Subscriber sub = nh.subscribe("move_base/feedback", 1, takeStatus);
+	
+	// create a timer
+	ros::Timer timer = nh.createTimer(ros::Duration(60.0),cancelGoalTimer);
 	
 	// spin the program
 	ros::spin();
