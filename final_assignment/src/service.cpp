@@ -99,9 +99,10 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			//defining the variables to store the input
 			float inX,inY;
 
-			// get the value
+			// get the value by the user
 			std::cin >> inX >> inY;
 			
+			// clear the output to print again in a white background
 			system("clear");
 			
 			// function to set the params
