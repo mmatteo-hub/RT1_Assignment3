@@ -35,6 +35,7 @@ void callBack()
 	// getting the keyboard input
 	std::cin >> inputUsr;
 
+	// clear the output to print again in a white background
 	system("clear");
 
 	// put the input on the request of the server
