@@ -100,12 +100,14 @@
   </node>
   
   <!-- Run the service node -->
-  <node pkg="final_assignment" type="service0_node" respawn="false" name="service0_node" output="screen" launch-prefix="xterm -e" required="true"/>
+  <node pkg="final_assignment" type="service0_node" respawn="true" name="service0_node" output="screen" launch-prefix="xterm -e" required="true"/>
  
   <!-- Run the UI node -->
-  <node pkg="final_assignment" type="UI0_node" respawn="false" name="UI0_node" output="screen" launch-prefix="xterm -e"/>
+  <node pkg="final_assignment" type="UI0_node" respawn="true" name="UI0_node" output="screen" launch-prefix="xterm -e"/>
   
   <!-- Run the teleop_twist_keyboard node -->
-  <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" respawn="false" name="teleop_twist_keyboard" output="screen" launch-prefix="xterm -e"/>
+  <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" respawn="true" name="teleop_twist_keyboard" output="screen" launch-prefix="xterm -e">
+  <remap from="cmd_vel" to="my_cmd_vel"/>
+  </node>
 
 </launch>

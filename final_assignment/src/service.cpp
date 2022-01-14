@@ -85,7 +85,7 @@ void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 	// set the goalID variable with the value of the actual goal id
 	goalID = msg -> status.goal_id.id;
 }
-
+/*
 // function to take the velocity: always available the current vel of the robot
 void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 {
@@ -96,7 +96,7 @@ void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 	n.linear.x = m -> linear.x;
 	n.angular.z = m -> angular.z;
 }
-
+*/
 // menu to display inside the switch
 void menu()
 {
@@ -144,6 +144,7 @@ void drive()
 	char inputUsr;
 	while(inputUsr != 'q')
 	{
+		std::cin >> inputUsr;
 		switch(inputUsr)
 		{
 			// manual drive inserted
@@ -168,7 +169,7 @@ void drive()
 		}
 	}
 }
-
+/*
 // function to assist the robot driving
 void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 {
@@ -214,17 +215,17 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 	// fill the front
 	for(int i = 0; i < SIZE; i++)
 	{
-		fr_right[i] = r[i+2*SIZE];
+		front[i] = r[i+2*SIZE];
 	}
 	// fill the front left
 	for(int i = 0; i < SIZE; i++)
 	{
-		fr_right[i] = r[i+3*SIZE];
+		fr_left[i] = r[i+3*SIZE];
 	}
 	// fill the left
 	for(int i = 0; i < SIZE; i++)
 	{
-		fr_right[i] = r[i+4*SIZE];
+		left[i] = r[i+4*SIZE];
 	}
 	
 	// check if there is an obstacle in the front
@@ -286,7 +287,7 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 	
 	// publish the new velocity
 	pubV.publish(n);
-}
+}*/
 
 // switch to choose what to do given a certain input
 bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Service::Response &res)
@@ -317,7 +318,7 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 		// drive the robot with the teleop_twist_kwyboard
 		case '2':
-			
+			menuManual();
 			break;
 			
 		// delete the current goal
@@ -367,10 +368,10 @@ int main(int argc, char ** argv)
 	ros::Subscriber sub = nh.subscribe("move_base/feedback", 1, takeStatus);
 	
 	// subscribe to the topic prov_cmd_vel to have the value of the velocity
-	ros::Subscriber subL = nh.subscribe("/cmd_vel", 1, takeVel);
+	//ros::Subscriber subL = nh.subscribe("/my_cmd_vel", 1, takeVel);
 	
 	// subscribe to the topic scan to have the value of the laser to avoid obstacles
-	ros::Subscriber subV = nh.subscribe("/base_scan", 1, driveAssist);
+	//ros::Subscriber subV = nh.subscribe("/base_scan", 1, driveAssist);
 	
 	// timer is created inside the main only if the program enters the case 1 and 3 of the setDriveMod function
 	if(flag)
