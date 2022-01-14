@@ -43,9 +43,6 @@ actionlib_msgs::GoalID goalToCancel;
 // define a variable to publish the new velocity
 geometry_msgs::Twist n;
 
-// flag to enable the target
-int flag = 0;
-
 // function to set the parameters to the right field of the variable to publish
 void setPoseParams(float inX, float inY)
 {
@@ -101,7 +98,7 @@ void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 	// check if there is not the manual drive inserted
 	if(!manual)
 	{
-		// do not publish
+		// do not do anything
 		return;
 	}
 	
@@ -152,11 +149,8 @@ void menuManual()
 }
 
 // manual drive
-void manDrive()
+void manuallyDrive()
 {
-	// set true because the way of driving switched to manual
-	manual = true;
-	
 	// define a variable to store the user input
 	char inputUsr;
 	while(inputUsr != 'q')
@@ -170,6 +164,8 @@ void manDrive()
 		{
 			// driving assistence inserted
 			case 'm':
+				// set true because the way of driving switched to manual
+				manual = true;
 				assistDrive = true;
 				// print
 				std::cout << "Manual drive inserted.\n";
@@ -177,6 +173,8 @@ void manDrive()
 				
 			// driving assistence not inserted
 			case 'n':
+				// set true because the way of driving switched to manual
+				manual = true;
 				assistDrive = false;
 				// print
 				std::cout << "Manual drive not inserted.\n";
@@ -192,6 +190,7 @@ void manDrive()
 				n.linear.x = 0;
 				n.angular.z = 0;
 				pubV.publish(n);
+				break;
 				
 			// invalid input
 			default:
@@ -205,119 +204,126 @@ void manDrive()
 void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 {
 	// check if the manual drive is on or not
-	if(!assistDrive)
+	if(assistDrive)
 	{
-		//return because it is off
-		return;
-	}
-	
-	// declare an array of dimension of the ranges (720)
-	float r[m->ranges.size()];
-	
-	// fill the new array to make the data available
-	for(int i = 0; i < m->ranges.size(); i++)
-	{
-		r[i] = m->ranges[i];
-	}
-	
-	// use all the value for the sector so divid them into 144 array (720/5)
-	
-	// right
-	double right[SIZE];
-	// front rigth
-	double fr_right[SIZE];
-	// front
-	double front[SIZE];
-	// front left
-	double fr_left[SIZE];
-	// left
-	double left[SIZE];
-	
-	// fill the right
-	for(int i = 0; i < SIZE; i++)
-	{
-		right[i] = r[i];
-	}
-	// fill the front right
-	for(int i = 0; i < SIZE; i++)
-	{
-		fr_right[i] = r[i+SIZE];
-	}
-	// fill the front
-	for(int i = 0; i < SIZE; i++)
-	{
-		front[i] = r[i+2*SIZE];
-	}
-	// fill the front left
-	for(int i = 0; i < SIZE; i++)
-	{
-		fr_left[i] = r[i+3*SIZE];
-	}
-	// fill the left
-	for(int i = 0; i < SIZE; i++)
-	{
-		left[i] = r[i+4*SIZE];
-	}
-	
-	// check if there is an obstacle in the front
-	if(min_val(front) < th)
-	{
-		// if the robot has to go straight
-		if(n.linear.x > 0 && n.angular.z == 0)
+		// declare an array of dimension of the ranges (720)
+		float r[m->ranges.size()];
+		
+		// fill the new array to make the data available
+		for(int i = 0; i < m->ranges.size(); i++)
 		{
-			// stop the robot
-			n.linear.x = 0;
+			r[i] = m->ranges[i];
 		}
-	}
-	
-	// check the distance on the right with the front right array
-	if(min_val(fr_right) < th)
-	{
-		// if the robot has to turn on the right
-		if(n.linear.x > 0 && n.angular.z < 0)
+		
+		// use all the value for the sector so divid them into 144 array (720/5)
+		
+		// right
+		double right[SIZE];
+		// front rigth
+		double fr_right[SIZE];
+		// front
+		double front[SIZE];
+		// front left
+		double fr_left[SIZE];
+		// left
+		double left[SIZE];
+		
+		// fill the right
+		for(int i = 0; i < SIZE; i++)
 		{
-			// stop the robot
-			n.linear.x = 0;
-			n.linear.z = 0;
+			right[i] = r[i];
 		}
-	}
-	
-	// check the distance on the right
-	if(min_val(right) < th)
-	{
-		// if the robot has to turn on the right
-		if(n.linear.x == 0 && n.angular.z < 0)
+		// fill the front right
+		for(int i = 0; i < SIZE; i++)
 		{
-			// stop the robot
-			n.linear.z = 0;
+			fr_right[i] = r[i+SIZE];
 		}
-	}
-	
-	// check the distance on the left with the front left arrat
-	if(min_val(fr_left) < th)
-	{
-		// if the robot has to turn on the right
-		if(n.linear.x > 0 && n.angular.z > 0)
+		// fill the front
+		for(int i = 0; i < SIZE; i++)
 		{
-			// stop the robot
-			n.linear.x = 0;
-			n.linear.z = 0;
+			front[i] = r[i+2*SIZE];
 		}
-	}
-	
-	// check the distance on the left
-	if(min_val(left) < th)
-	{
-		// if the robot has to turn on the right
-		if(n.linear.x == 0 && n.angular.z > 0)
+		// fill the front left
+		for(int i = 0; i < SIZE; i++)
 		{
-			// stop the robot
-			n.linear.z = 0;
+			fr_left[i] = r[i+3*SIZE];
 		}
+		// fill the left
+		for(int i = 0; i < SIZE; i++)
+		{
+			left[i] = r[i+4*SIZE];
+		}
+		
+		// check if there is an obstacle in the front
+		if(min_val(front) < th)
+		{
+			// if the robot has to go straight
+			if(n.linear.x > 0 && n.angular.z == 0)
+			{
+				// print a warning
+				std::cout << "Wall in the front!";
+				// stop the robot
+				n.linear.x = 0;
+			}
+		}
+		
+		// check the distance on the right with the front right array
+		if(min_val(fr_right) < th)
+		{
+			// if the robot has to turn on the right
+			if(n.linear.x > 0 && n.angular.z < 0)
+			{
+				// print a warning
+				std::cout << "Wall on the front right!";
+				// stop the robot
+				n.linear.x = 0;
+				n.linear.z = 0;
+			}
+		}
+		
+		// check the distance on the right
+		if(min_val(right) < th)
+		{
+			// if the robot has to turn on the right
+			if(n.linear.x == 0 && n.angular.z < 0)
+			{
+				// print a warning
+				std::cout << "Wall on the right!";
+				// stop the robot
+				n.linear.z = 0;
+			}
+		}
+		
+		// check the distance on the left with the front left arrat
+		if(min_val(fr_left) < th)
+		{
+			// if the robot has to turn on the left
+			if(n.linear.x > 0 && n.angular.z > 0)
+			{
+				// print a warning
+				std::cout << "Wall on the front left!";
+				// stop the robot
+				n.linear.x = 0;
+				n.linear.z = 0;
+			}
+		}
+		
+		// check the distance on the left
+		if(min_val(left) < th)
+		{
+			// if the robot has to turn on the left
+			if(n.linear.x == 0 && n.angular.z > 0)
+			{
+				// print a warning
+				std::cout << "Wall on the left!";
+				// stop the robot
+				n.linear.z = 0;
+			}
+		}
+		
+		// publish the new velocity
+		pubV.publish(n);
 	}
-	
-	// publish the new velocity
-	pubV.publish(n);
 }
 
 // switch to choose what to do given a certain input
@@ -327,9 +333,6 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 	{	
 		// publish a position (x y)
 		case '1':
-			// set the flag value to 1 to enable the timer creation
-			flag = 1;
-			
 			// give some instructions
 			menu();
 
@@ -349,14 +352,12 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 		// drive the robot with the teleop_twist_kwyboard
 		case '2':
-			manDrive();
+			// call the function to drive the robot manually
+			manuallyDrive();
 			break;
 			
 		// delete the current goal
 		case '3':
-			// set the flag value to 1 to enable the timer creation
-			flag = 1;
-			
 			// call the function to cancel the goal
 			cancelGoal();
 			break;
@@ -368,6 +369,7 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 		// invalid input
 		default:
+			// print
 			std::cout << "Invalid input.";
 			break;
 	}
@@ -384,11 +386,11 @@ int main(int argc, char ** argv)
 	ros::NodeHandle nh;
 	
 	// advertise topics
-	// advertise the topic
-	pub = nh.advertise<move_base_msgs::MoveBaseActionGoal>("move_base/goal", 1);
+	// advertise the topic move_base/goal for setting the goal
+	pub = nh.advertise<move_base_msgs::MoveBaseActionGoal>("/move_base/goal", 1);
 	
-	// advertise the topic move_base/cancel
-	pubCancel = nh.advertise<actionlib_msgs::GoalID>("move_base/cancel", 1);
+	// advertise the topic move_base/cancel for cancelling the goal
+	pubCancel = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1);
 	
 	// advertise the topic prov_cmd_vel
 	pubV = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
@@ -398,24 +400,13 @@ int main(int argc, char ** argv)
 	
 	// subscribers
 	// subscribe to the topic feedback to have the status always available and updated
-	ros::Subscriber sub = nh.subscribe("move_base/feedback", 1, takeStatus);
+	ros::Subscriber sub = nh.subscribe("/move_base/feedback", 1, takeStatus);
 	
 	// subscribe to the topic prov_cmd_vel to have the value of the velocity
 	ros::Subscriber subV = nh.subscribe("/my_cmd_vel", 1, takeVel);
 	
 	// subscribe to the topic scan to have the value of the laser to avoid obstacles
 	ros::Subscriber subL = nh.subscribe("/base_scan", 1, driveAssist);
-	
-	// timer is created inside the main only if the program enters the case 1 and 3 of the setDriveMod function
-	if(flag)
-	{
-		// create a timer and iniziatilse it with 1 minute counter
-		ros::Timer timer = nh.createTimer(ros::Duration(60.0),cancelGoalTimer);
-	}
-	
-	// set the value to 0 again to avoid the creation of another timer before the necessary
-	// in this way every time the program enters the case 1 or 3 the timer is re-created starting again the 1 minute counter
-	flag = 0;
 	
 	// spin the program
 	ros::spin();
