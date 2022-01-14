@@ -59,18 +59,12 @@ int main(int argc, char ** argv)
 	
 	// spin the prorgram
 	// ros::spin() not used since there is not a topic to subscribe to which enables the spin mode
-	ros::AsyncSpinner spinner(3);
-	spinner.start();
-	callBack();
-	spinner.stop();
-	ros::shutdown();
-	ros::waitForShutdown();
 	
-	/*while(ros::ok())
+	while(ros::ok())
 	{
 		callBack();
 		ros::spinOnce();
-	}*/
+	}
 	
 	return 0;
 }

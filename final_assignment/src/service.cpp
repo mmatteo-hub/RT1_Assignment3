@@ -17,6 +17,8 @@
 
 // variable to determine the manual drive
 bool manual = false;
+// variable to determine the assistance during drive
+bool assistDrive = false;
 
 // define publishers:
 // pub for the goal 
@@ -85,18 +87,29 @@ void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 	// set the goalID variable with the value of the actual goal id
 	goalID = msg -> status.goal_id.id;
 }
-/*
+
 // function to take the velocity: always available the current vel of the robot
 void takeVel(const geometry_msgs::Twist::ConstPtr& m)
-{
-	if(!manual)
+{	
+	// check if there is not the driving assistence mode inserted
+	if(!assistDrive)
 	{
 		pubV.publish(m);
+		return;
 	}
+	
+	// check if there is not the manual drive inserted
+	if(!manual)
+	{
+		// do not publish
+		return;
+	}
+	
+	// update the velocity value
 	n.linear.x = m -> linear.x;
 	n.angular.z = m -> angular.z;
 }
-*/
+
 // menu to display inside the switch
 void menu()
 {
@@ -133,30 +146,48 @@ double min_val(double a[])
 void menuManual()
 {
 	std::cout << "\n###################### INFOS ######################\n";
-	std::cout << "\nEnter:\nm to manual drive;\nq to quit\n";
+	std::cout << "\nEnter:\nm to use the driving assistence\nn to not use the driving assistence;\nq to quit\n";
 	std::cout << "###################################################\n";
 	std::cout << "\nType here: ";
 }
 
 // manual drive
-void drive()
+void manDrive()
 {
+	// set true because the way of driving switched to manual
+	manual = true;
+	
+	// define a variable to store the user input
 	char inputUsr;
 	while(inputUsr != 'q')
 	{
+		// show the menu
+		menuManual();
+		// get the user choice
 		std::cin >> inputUsr;
+		system("clear");
 		switch(inputUsr)
 		{
-			// manual drive inserted
+			// driving assistence inserted
 			case 'm':
-				manual = true;
+				assistDrive = true;
 				// print
 				std::cout << "Manual drive inserted.\n";
 				break;
-			
+				
+			// driving assistence not inserted
+			case 'n':
+				assistDrive = false;
+				// print
+				std::cout << "Manual drive not inserted.\n";
+				break;
+				
 			// exit the program
 			case 'q':
+				// stop the manual drive
 				manual = false;
+				// stop the driving assistance
+				assistDrive = false;
 				// stop the manual drive and stop the robot too
 				n.linear.x = 0;
 				n.angular.z = 0;
@@ -169,12 +200,12 @@ void drive()
 		}
 	}
 }
-/*
+
 // function to assist the robot driving
 void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 {
 	// check if the manual drive is on or not
-	if(!manual)
+	if(!assistDrive)
 	{
 		//return because it is off
 		return;
@@ -287,7 +318,7 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 	
 	// publish the new velocity
 	pubV.publish(n);
-}*/
+}
 
 // switch to choose what to do given a certain input
 bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Service::Response &res)
@@ -318,7 +349,7 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 		// drive the robot with the teleop_twist_kwyboard
 		case '2':
-			menuManual();
+			manDrive();
 			break;
 			
 		// delete the current goal
@@ -352,6 +383,7 @@ int main(int argc, char ** argv)
 	// defining a node handle
 	ros::NodeHandle nh;
 	
+	// advertise topics
 	// advertise the topic
 	pub = nh.advertise<move_base_msgs::MoveBaseActionGoal>("move_base/goal", 1);
 	
@@ -359,19 +391,20 @@ int main(int argc, char ** argv)
 	pubCancel = nh.advertise<actionlib_msgs::GoalID>("move_base/cancel", 1);
 	
 	// advertise the topic prov_cmd_vel
-	pubCancel = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+	pubV = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 	
 	// advertise the service and call the function
 	ros::ServiceServer service = nh.advertiseService("/service", setDriveMod);
 	
+	// subscribers
 	// subscribe to the topic feedback to have the status always available and updated
 	ros::Subscriber sub = nh.subscribe("move_base/feedback", 1, takeStatus);
 	
 	// subscribe to the topic prov_cmd_vel to have the value of the velocity
-	//ros::Subscriber subL = nh.subscribe("/my_cmd_vel", 1, takeVel);
+	ros::Subscriber subV = nh.subscribe("/my_cmd_vel", 1, takeVel);
 	
 	// subscribe to the topic scan to have the value of the laser to avoid obstacles
-	//ros::Subscriber subV = nh.subscribe("/base_scan", 1, driveAssist);
+	ros::Subscriber subL = nh.subscribe("/base_scan", 1, driveAssist);
 	
 	// timer is created inside the main only if the program enters the case 1 and 3 of the setDriveMod function
 	if(flag)
