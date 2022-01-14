@@ -9,11 +9,22 @@
 #include "geometry_msgs/PointStamped.h"
 #include "move_base_msgs/MoveBaseActionFeedback.h"
 
+// size for the array
+#define SIZE 144
+
+// define for the distance
+#define th 0.5
+
+// variable to determine the manual drive
+bool manual = false;
+
 // define publishers:
 // pub for the goal 
 ros::Publisher pub;
 // pub to cancel the goal
 ros::Publisher pubCancel;
+// pub to publishthe velocity
+ros::Publisher pubV;
 
 // define a variable to publish
 move_base_msgs::MoveBaseActionGoal pose;
@@ -26,6 +37,9 @@ std::string goalID;
 
 // define a variable for reading fields of the goal to cancel
 actionlib_msgs::GoalID goalToCancel;
+
+// define a variable to publish the new velocity
+geometry_msgs::Twist n;
 
 // flag to enable the target
 int flag = 0;
@@ -72,6 +86,17 @@ void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 	goalID = msg -> status.goal_id.id;
 }
 
+// function to take the velocity: always available the current vel of the robot
+void takeVel(const geometry_msgs::Twist::ConstPtr& m)
+{
+	if(!manual)
+	{
+		pubV.publish(m);
+	}
+	n.linear.x = m -> linear.x;
+	n.angular.z = m -> angular.z;
+}
+
 // menu to display inside the switch
 void menu()
 {
@@ -81,6 +106,186 @@ void menu()
 	std::cout << "\t^\n\t|\n\t|\n\t|\n\t|\n\t°---------->\nO = (0 0)\n";
 	std::cout << "###################################################\n";
 	std::cout << "\nType here: ";
+}
+
+// function to calculate the minimum distance among array values
+double min_val(double a[])
+{
+	// setting dist as the maximum for the laser so that there cannot be errors
+	double dist = 30;
+	
+	// test each element of the array
+	for(int i = 0; i < SIZE; i++)
+	{
+		// check if the value is less than the distance
+		if(a[i] < dist)
+		{
+			// update tge distance with the value
+			dist = a[i];
+		}
+	}
+	
+	// return the distance found as minimum
+	return dist;
+}
+
+// menu for the drive manual
+void menuManual()
+{
+	std::cout << "\n###################### INFOS ######################\n";
+	std::cout << "\nEnter:\nm to manual drive;\nq to quit\n";
+	std::cout << "###################################################\n";
+	std::cout << "\nType here: ";
+}
+
+// manual drive
+void drive()
+{
+	char inputUsr;
+	while(inputUsr != 'q')
+	{
+		switch(inputUsr)
+		{
+			// manual drive inserted
+			case 'm':
+				manual = true;
+				// print
+				std::cout << "Manual drive inserted.\n";
+				break;
+			
+			// exit the program
+			case 'q':
+				manual = false;
+				// stop the manual drive and stop the robot too
+				n.linear.x = 0;
+				n.angular.z = 0;
+				pubV.publish(n);
+				
+			// invalid input
+			default:
+				std::cout << "Invalid input.";
+				break;
+		}
+	}
+}
+
+// function to assist the robot driving
+void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
+{
+	// check if the manual drive is on or not
+	if(!manual)
+	{
+		//return because it is off
+		return;
+	}
+	
+	// declare an array of dimension of the ranges (720)
+	float r[m->ranges.size()];
+	
+	// fill the new array to make the data available
+	for(int i = 0; i < m->ranges.size(); i++)
+	{
+		r[i] = m->ranges[i];
+	}
+	
+	// use all the value for the sector so divid them into 144 array (720/5)
+	
+	// right
+	double right[SIZE];
+	// front rigth
+	double fr_right[SIZE];
+	// front
+	double front[SIZE];
+	// front left
+	double fr_left[SIZE];
+	// left
+	double left[SIZE];
+	
+	// fill the right
+	for(int i = 0; i < SIZE; i++)
+	{
+		right[i] = r[i];
+	}
+	// fill the front right
+	for(int i = 0; i < SIZE; i++)
+	{
+		fr_right[i] = r[i+SIZE];
+	}
+	// fill the front
+	for(int i = 0; i < SIZE; i++)
+	{
+		fr_right[i] = r[i+2*SIZE];
+	}
+	// fill the front left
+	for(int i = 0; i < SIZE; i++)
+	{
+		fr_right[i] = r[i+3*SIZE];
+	}
+	// fill the left
+	for(int i = 0; i < SIZE; i++)
+	{
+		fr_right[i] = r[i+4*SIZE];
+	}
+	
+	// check if there is an obstacle in the front
+	if(min_val(front) < th)
+	{
+		// if the robot has to go straight
+		if(n.linear.x > 0 && n.angular.z == 0)
+		{
+			// stop the robot
+			n.linear.x = 0;
+		}
+	}
+	
+	// check the distance on the right with the front right array
+	if(min_val(fr_right) < th)
+	{
+		// if the robot has to turn on the right
+		if(n.linear.x > 0 && n.angular.z < 0)
+		{
+			// stop the robot
+			n.linear.x = 0;
+			n.linear.z = 0;
+		}
+	}
+	
+	// check the distance on the right
+	if(min_val(right) < th)
+	{
+		// if the robot has to turn on the right
+		if(n.linear.x == 0 && n.angular.z < 0)
+		{
+			// stop the robot
+			n.linear.z = 0;
+		}
+	}
+	
+	// check the distance on the left with the front left arrat
+	if(min_val(fr_left) < th)
+	{
+		// if the robot has to turn on the right
+		if(n.linear.x > 0 && n.angular.z > 0)
+		{
+			// stop the robot
+			n.linear.x = 0;
+			n.linear.z = 0;
+		}
+	}
+	
+	// check the distance on the left
+	if(min_val(left) < th)
+	{
+		// if the robot has to turn on the right
+		if(n.linear.x == 0 && n.angular.z > 0)
+		{
+			// stop the robot
+			n.linear.z = 0;
+		}
+	}
+	
+	// publish the new velocity
+	pubV.publish(n);
 }
 
 // switch to choose what to do given a certain input
@@ -152,11 +357,20 @@ int main(int argc, char ** argv)
 	// advertise the topic move_base/cancel
 	pubCancel = nh.advertise<actionlib_msgs::GoalID>("move_base/cancel", 1);
 	
+	// advertise the topic prov_cmd_vel
+	pubCancel = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+	
 	// advertise the service and call the function
 	ros::ServiceServer service = nh.advertiseService("/service", setDriveMod);
 	
 	// subscribe to the topic feedback to have the status always available and updated
 	ros::Subscriber sub = nh.subscribe("move_base/feedback", 1, takeStatus);
+	
+	// subscribe to the topic prov_cmd_vel to have the value of the velocity
+	ros::Subscriber subL = nh.subscribe("/cmd_vel", 1, takeVel);
+	
+	// subscribe to the topic scan to have the value of the laser to avoid obstacles
+	ros::Subscriber subV = nh.subscribe("/base_scan", 1, driveAssist);
 	
 	// timer is created inside the main only if the program enters the case 1 and 3 of the setDriveMod function
 	if(flag)
