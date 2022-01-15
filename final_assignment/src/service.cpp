@@ -92,15 +92,6 @@ void cancelGoal()
 	}
 }
 
-// function to cancel the goal by the timer
-void cancelGoalTimer(const ros::TimerEvent)
-{
-	// set the goal id to cancel equat to the actual goalID
-	goalToCancel.id = goalID;
-	// publish to cancel
-	pubCancel.publish(goalToCancel);
-}
-
 // function to take the status: in particular the actual goal id
 void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 {
