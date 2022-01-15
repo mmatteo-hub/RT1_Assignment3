@@ -19,6 +19,8 @@
 bool manual = false;
 // variable to determine the assistance during drive
 bool assistDrive = false;
+// variable to know if there is a goal
+bool G = false;
 
 // define publishers:
 // pub for the goal 
@@ -43,6 +45,10 @@ actionlib_msgs::GoalID goalToCancel;
 // define a variable to publish the new velocity
 geometry_msgs::Twist n;
 
+// define variables to store the goal
+float xG;
+float yG;
+
 // function to set the parameters to the right field of the variable to publish
 void setPoseParams(float inX, float inY)
 {
@@ -58,15 +64,32 @@ void setPoseParams(float inX, float inY)
 	
 	// publish the target chosen
 	pub.publish(pose);
+	
+	// set the goal flag
+	G = true;
 }
 
 // function to cancel the goal by the user input
 void cancelGoal()
 {
-	// set the goal id to cancel equat to the actual goalID
-	goalToCancel.id = goalID;
-	// publish to cancel
-	pubCancel.publish(goalToCancel);
+	system("clear");
+	// check the presence of a goal
+	if(G)
+	{
+		// set the goal id to cancel equat to the actual goalID
+		goalToCancel.id = goalID;
+		// publish to cancel
+		pubCancel.publish(goalToCancel);
+		// set the flag to flase
+		G = false;
+		// print
+		std::cout << "Goal cancelled.\n";
+	}
+	else
+	{
+		// print
+		std::cout << "No goal set.\n";
+	}
 }
 
 // function to cancel the goal by the timer
@@ -83,18 +106,33 @@ void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 {
 	// set the goalID variable with the value of the actual goal id
 	goalID = msg -> status.goal_id.id;
+	
+	// check the presence of a goal
+	if(G)
+	{
+		// check the distance of both coordinates to see if the robot is near the goal
+		if(abs(msg -> feedback.base_position.pose.position.x - xG) <= th && abs(msg -> feedback.base_position.pose.position.y - yG) <= th)
+		{
+			// print
+			std::cout << "Goal reached successfully\n";
+			// cancel goal
+			cancelGoal();
+		}
+	}
+}
+
+// function to store the current goal of the robot
+void currGoal(const move_base_msgs::MoveBaseActionGoal::ConstPtr& m)
+{
+	// get x coordinate of the current goal
+	xG = m -> goal.target_pose.pose.position.x;
+	// get y coordinate of the current goal
+	yG = m -> goal.target_pose.pose.position.y;
 }
 
 // function to take the velocity: always available the current vel of the robot
 void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 {	
-	// check if there is not the driving assistence mode inserted
-	if(!assistDrive)
-	{
-		pubV.publish(m);
-		return;
-	}
-	
 	// check if there is not the manual drive inserted
 	if(!manual)
 	{
@@ -102,9 +140,12 @@ void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 		return;
 	}
 	
-	// update the velocity value
-	n.linear.x = m -> linear.x;
-	n.angular.z = m -> angular.z;
+	else
+	{
+		// update the velocity value
+		n.linear.x = m -> linear.x;
+		n.angular.z = m -> angular.z;
+	}
 }
 
 // menu to display inside the switch
@@ -164,7 +205,6 @@ void manuallyDrive()
 		{
 			// driving assistence inserted
 			case 'm':
-				// set true because the way of driving switched to manual
 				manual = true;
 				assistDrive = true;
 				// print
@@ -173,7 +213,6 @@ void manuallyDrive()
 				
 			// driving assistence not inserted
 			case 'n':
-				// set true because the way of driving switched to manual
 				manual = true;
 				assistDrive = false;
 				// print
@@ -182,7 +221,6 @@ void manuallyDrive()
 				
 			// exit the program
 			case 'q':
-				// stop the manual drive
 				manual = false;
 				// stop the driving assistance
 				assistDrive = false;
@@ -385,6 +423,10 @@ int main(int argc, char ** argv)
 	// defining a node handle
 	ros::NodeHandle nh;
 	
+	// advertise the service
+	// advertise the service and call the function
+	ros::ServiceServer service = nh.advertiseService("/service", setDriveMod);
+	
 	// advertise topics
 	// advertise the topic move_base/goal for setting the goal
 	pub = nh.advertise<move_base_msgs::MoveBaseActionGoal>("/move_base/goal", 1);
@@ -392,15 +434,15 @@ int main(int argc, char ** argv)
 	// advertise the topic move_base/cancel for cancelling the goal
 	pubCancel = nh.advertise<actionlib_msgs::GoalID>("/move_base/cancel", 1);
 	
-	// advertise the topic prov_cmd_vel
+	// advertise the topic cmd_vel
 	pubV = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-	
-	// advertise the service and call the function
-	ros::ServiceServer service = nh.advertiseService("/service", setDriveMod);
 	
 	// subscribers
 	// subscribe to the topic feedback to have the status always available and updated
 	ros::Subscriber sub = nh.subscribe("/move_base/feedback", 1, takeStatus);
+	
+	// subscribe to the topic goal to have the current status always available and updated
+	ros::Subscriber subG = nh.subscribe("/move_base/goal", 1, currGoal);
 	
 	// subscribe to the topic prov_cmd_vel to have the value of the velocity
 	ros::Subscriber subV = nh.subscribe("/my_cmd_vel", 1, takeVel);
