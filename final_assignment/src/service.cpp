@@ -133,7 +133,7 @@ void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 	{
 		// update the velocity value
 		n.linear.x = m -> linear.x;
-		n.angular.z = m -> angular.z;	
+		n.angular.z = m -> angular.z;
 	}
 }
 
@@ -379,7 +379,7 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			
 		// drive the robot with the teleop_twist_kwyboard
 		case '2':
-			// call the function to drive the robot manually
+			/// call the function to drive the robot manually
 			manuallyDrive();
 			break;
 			
@@ -434,7 +434,7 @@ int main(int argc, char ** argv)
 	ros::Subscriber subG = nh.subscribe("/move_base/goal", 1, currGoal);
 	
 	// subscribe to the topic prov_cmd_vel to have the value of the velocity
-	ros::Subscriber subV = nh.subscribe("/my_cmd_vel", 1, takeVel);
+	ros::Subscriber subV = nh.subscribe("/cmd_vel", 1, takeVel);
 	
 	// subscribe to the topic scan to have the value of the laser to avoid obstacles
 	ros::Subscriber subL = nh.subscribe("/base_scan", 1, driveAssist);
