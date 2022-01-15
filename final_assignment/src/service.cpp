@@ -15,6 +15,9 @@
 // define for the distance
 #define th 0.5
 
+// define for the distance of the wall
+#define wth 1
+
 // variable to determine the manual drive
 bool manual = false;
 // variable to determine the assistance during drive
@@ -104,6 +107,7 @@ void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 		// check the distance of both coordinates to see if the robot is near the goal
 		if(abs(msg -> feedback.base_position.pose.position.x - xG) <= th && abs(msg -> feedback.base_position.pose.position.y - yG) <= th)
 		{
+			system("clear");
 			// print
 			std::cout << "Goal reached successfully\n";
 			// cancel goal
@@ -125,17 +129,11 @@ void currGoal(const move_base_msgs::MoveBaseActionGoal::ConstPtr& m)
 void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 {	
 	// check if there is not the manual drive inserted
-	if(!manual)
-	{
-		// do not do anything
-		return;
-	}
-	
-	else
+	if(manual)
 	{
 		// update the velocity value
 		n.linear.x = m -> linear.x;
-		n.angular.z = m -> angular.z;
+		n.angular.z = m -> angular.z;	
 	}
 }
 
@@ -284,7 +282,7 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 		}
 		
 		// check if there is an obstacle in the front
-		if(min_val(front) < th)
+		if(min_val(front) < wth)
 		{
 			// if the robot has to go straight
 			if(n.linear.x > 0 && n.angular.z == 0)
@@ -297,7 +295,7 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 		}
 		
 		// check the distance on the right with the front right array
-		if(min_val(fr_right) < th)
+		if(min_val(fr_right) < wth)
 		{
 			// if the robot has to turn on the right
 			if(n.linear.x > 0 && n.angular.z < 0)
@@ -311,7 +309,7 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 		}
 		
 		// check the distance on the right
-		if(min_val(right) < th)
+		if(min_val(right) < wth)
 		{
 			// if the robot has to turn on the right
 			if(n.linear.x == 0 && n.angular.z < 0)
@@ -324,7 +322,7 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 		}
 		
 		// check the distance on the left with the front left arrat
-		if(min_val(fr_left) < th)
+		if(min_val(fr_left) < wth)
 		{
 			// if the robot has to turn on the left
 			if(n.linear.x > 0 && n.angular.z > 0)
@@ -338,7 +336,7 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 		}
 		
 		// check the distance on the left
-		if(min_val(left) < th)
+		if(min_val(left) < wth)
 		{
 			// if the robot has to turn on the left
 			if(n.linear.x == 0 && n.angular.z > 0)
