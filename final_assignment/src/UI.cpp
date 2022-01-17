@@ -17,6 +17,75 @@ void menu()
 	std::cout << "###################################################\n";
 }
 
+// menu for the drive manual
+void menuManual()
+{
+	std::cout << "\n###################### INFOS ######################\n";
+	std::cout << "\nEnter:\nm to use assit drive\nn to not use assist drive\nq to quit\n";
+	std::cout << "###################################################\n";
+	std::cout << "\nType here: ";
+}
+
+// manual drive
+void manuallyDrive()
+{
+	// defining a variable s of type final_assignment::Service
+	final_assignment::Service s;
+	// define a variable to store the user input
+	char inputUsr;
+	while(inputUsr != 'q')
+	{
+		// show the menu
+		menuManual();
+		// get the user choice
+		std::cin >> inputUsr;
+		system("clear");
+		switch(inputUsr)
+		{	
+			// assist enabled
+			case 'm':
+				// print
+				std::cout << "Manual drive with assistance driving enabled\n";
+				// put the input on the request of the server
+				s.request.input = inputUsr;
+				// waut for the existance of the server
+				client.waitForExistence();
+				// call the server
+				client.call(s);
+				break;
+				
+			// assist disabled
+			case 'n':
+				// print
+				std::cout << "Manual drive with assistance driving disabled\n";
+				// put the input on the request of the server
+				s.request.input = inputUsr;
+				// waut for the existance of the server
+				client.waitForExistence();
+				// call the server
+				client.call(s);
+				break;
+				
+			// exit the program
+			case 'q':
+				// print
+				std::cout << "Manual drive ended\n";
+				// put the input on the request of the server
+				s.request.input = inputUsr;
+				// waut for the existance of the server
+				client.waitForExistence();
+				// call the server
+				client.call(s);
+				break;
+				
+			// invalid input
+			default:
+				std::cout << "Invalid input\n";
+				break;
+		}
+	}
+}
+
 // function to show the menù and give the input
 void callBack()
 {
@@ -34,6 +103,12 @@ void callBack()
 	
 	// getting the keyboard input
 	std::cin >> inputUsr;
+	
+	if(inputUsr == '2')
+	{
+		system("clear");
+		manuallyDrive();
+	}
 
 	// clear the output to print again in a white background
 	system("clear");

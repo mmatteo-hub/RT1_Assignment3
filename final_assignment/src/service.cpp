@@ -8,6 +8,8 @@
 #include "move_base_msgs/MoveBaseActionGoal.h"
 #include "geometry_msgs/PointStamped.h"
 #include "move_base_msgs/MoveBaseActionFeedback.h"
+#include <ros/callback_queue.h>
+#include <thread>
 
 // size for the array
 #define SIZE 144
@@ -18,10 +20,10 @@
 // define for the distance of the wall
 #define wth 1
 
-// variable to determine the manual drive
-bool manual = false;
 // variable to determine the assistance during drive
 bool assistDrive = false;
+//variable to allow the manual
+bool manual = false;
 // variable to know if there is a goal
 bool G = false;
 
@@ -128,13 +130,19 @@ void currGoal(const move_base_msgs::MoveBaseActionGoal::ConstPtr& m)
 // function to take the velocity: always available the current vel of the robot
 void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 {	
-	// check if there is not the manual drive inserted
-	if(manual)
+	if(!manual)
 	{
-		// update the velocity value
-		n.linear.x = m -> linear.x;
-		n.angular.z = m -> angular.z;
+		return;
 	}
+	if(!assistDrive)
+	{
+		pubV.publish(m);
+		return;
+	}
+	
+	// update the velocity value
+	n.linear.x = m -> linear.x;
+	n.angular.z = m -> angular.z;
 }
 
 // menu to display inside the switch
@@ -169,61 +177,29 @@ double min_val(double a[])
 	return dist;
 }
 
-// menu for the drive manual
-void menuManual()
-{
-	std::cout << "\n###################### INFOS ######################\n";
-	std::cout << "\nEnter:\nm to use the driving assistence\nn to not use the driving assistence;\nq to quit\n";
-	std::cout << "###################################################\n";
-	std::cout << "\nType here: ";
-}
-
 // manual drive
-void manuallyDrive()
+void manuallyDrive(char input)
 {
-	// define a variable to store the user input
-	char inputUsr;
-	while(inputUsr != 'q')
+	manual = true;
+	switch(input)
 	{
-		// show the menu
-		menuManual();
-		// get the user choice
-		std::cin >> inputUsr;
-		system("clear");
-		switch(inputUsr)
-		{
-			// driving assistence inserted
-			case 'm':
-				manual = true;
-				assistDrive = true;
-				// print
-				std::cout << "Manual drive inserted.\n";
-				break;
-				
-			// driving assistence not inserted
-			case 'n':
-				manual = true;
-				assistDrive = false;
-				// print
-				std::cout << "Manual drive not inserted.\n";
-				break;
-				
-			// exit the program
-			case 'q':
-				manual = false;
-				// stop the driving assistance
-				assistDrive = false;
-				// stop the manual drive and stop the robot too
-				n.linear.x = 0;
-				n.angular.z = 0;
-				pubV.publish(n);
-				break;
-				
-			// invalid input
-			default:
-				std::cout << "Invalid input.";
-				break;
-		}
+		case 'm':
+			assistDrive = true;
+			break;
+		
+		case 'n':
+			assistDrive = false;
+			break;
+			
+		case 'q':
+			manual = false;
+			assistDrive = false;
+			n.linear.x = 0;
+			n.angular.z = 0;
+			
+			pubV.publish(n);
+			
+			break;
 	}
 }
 
@@ -360,6 +336,8 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 	{	
 		// publish a position (x y)
 		case '1':
+			system("clear");
+			
 			// give some instructions
 			menu();
 
@@ -378,9 +356,11 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 			break;
 			
 		// drive the robot with the teleop_twist_kwyboard
-		case '2':
-			/// call the function to drive the robot manually
-			manuallyDrive();
+		case 'm':
+		case 'n':
+		case 'q':
+			// call the function to drive the robot manually
+			manuallyDrive(req.input);
 			break;
 			
 		// delete the current goal
@@ -426,7 +406,6 @@ int main(int argc, char ** argv)
 	// advertise the topic cmd_vel
 	pubV = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 	
-	// subscribers
 	// subscribe to the topic feedback to have the status always available and updated
 	ros::Subscriber sub = nh.subscribe("/move_base/feedback", 1, takeStatus);
 	
@@ -434,7 +413,7 @@ int main(int argc, char ** argv)
 	ros::Subscriber subG = nh.subscribe("/move_base/goal", 1, currGoal);
 	
 	// subscribe to the topic prov_cmd_vel to have the value of the velocity
-	ros::Subscriber subV = nh.subscribe("/cmd_vel", 1, takeVel);
+	ros::Subscriber subV = nh.subscribe("/my_cmd_vel", 1, takeVel);
 	
 	// subscribe to the topic scan to have the value of the laser to avoid obstacles
 	ros::Subscriber subL = nh.subscribe("/base_scan", 1, driveAssist);
