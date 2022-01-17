@@ -13,14 +13,15 @@ ros::Publisher pub;
 void menu()
 {
 	std::cout << "\n###################### MENU' ######################";
-	std::cout << "\nPress:\n1 to publish a target with (x,y);\n2 to drive the robot with keyboard;\n3 to delete the current goal;\n0 to stop the program execution.\n\nIMPORTANT: The goal will be automatically cancelled after 60 seconds\n";
+	std::cout << "\nPress:\n1 to publish a target with (x,y);\n2 to drive the robot with keyboard;\n3 to delete the current goal;\n0 to stop the program execution.\n";
 	std::cout << "###################################################\n";
+	std::cout << "\nType here: ";
 }
 
 // menu for the drive manual
 void menuManual()
 {
-	std::cout << "\n###################### INFOS ######################\n";
+	std::cout << "###################### INFOS ######################\n";
 	std::cout << "\nEnter:\nm to use assit drive\nn to not use assist drive\nq to quit\n";
 	std::cout << "###################################################\n";
 	std::cout << "\nType here: ";
@@ -80,6 +81,7 @@ void manuallyDrive()
 				
 			// invalid input
 			default:
+				// print
 				std::cout << "Invalid input\n";
 				break;
 		}
@@ -104,9 +106,11 @@ void callBack()
 	// getting the keyboard input
 	std::cin >> inputUsr;
 	
+	// check if the input is the manual drive one
 	if(inputUsr == '2')
 	{
 		system("clear");
+		// call the function to manage the choice for the manual drive
 		manuallyDrive();
 	}
 
@@ -137,6 +141,7 @@ int main(int argc, char ** argv)
 	
 	while(ros::ok())
 	{
+		// call the function to manage the choice of the user for the behaviour of the robot
 		callBack();
 		ros::spinOnce();
 	}

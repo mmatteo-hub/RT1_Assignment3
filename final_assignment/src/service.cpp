@@ -8,8 +8,6 @@
 #include "move_base_msgs/MoveBaseActionGoal.h"
 #include "geometry_msgs/PointStamped.h"
 #include "move_base_msgs/MoveBaseActionFeedback.h"
-#include <ros/callback_queue.h>
-#include <thread>
 
 // size for the array
 #define SIZE 144
@@ -110,10 +108,11 @@ void takeStatus(const move_base_msgs::MoveBaseActionFeedback::ConstPtr& msg)
 		if(abs(msg -> feedback.base_position.pose.position.x - xG) <= th && abs(msg -> feedback.base_position.pose.position.y - yG) <= th)
 		{
 			system("clear");
-			// print
-			std::cout << "Goal reached successfully\n";
 			// cancel goal
 			cancelGoal();
+			system("clear");
+			// print
+			std::cout << "Goal reached successfully\n";
 		}
 	}
 }
@@ -130,12 +129,16 @@ void currGoal(const move_base_msgs::MoveBaseActionGoal::ConstPtr& m)
 // function to take the velocity: always available the current vel of the robot
 void takeVel(const geometry_msgs::Twist::ConstPtr& m)
 {	
+	// check the presence of the manual drive
 	if(!manual)
 	{
+		// do nothing
 		return;
 	}
+	// check the presence of the driving assistance
 	if(!assistDrive)
 	{
+		// publish the message
 		pubV.publish(m);
 		return;
 	}
@@ -263,8 +266,9 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 			// if the robot has to go straight
 			if(n.linear.x > 0 && n.angular.z == 0)
 			{
+				system("clear");
 				// print a warning
-				std::cout << "Wall in the front!";
+				std::cout << "Wall in the front!\n";
 				// stop the robot
 				n.linear.x = 0;
 			}
@@ -276,8 +280,9 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 			// if the robot has to turn on the right
 			if(n.linear.x > 0 && n.angular.z < 0)
 			{
+				system("clear");
 				// print a warning
-				std::cout << "Wall on the front right!";
+				std::cout << "Wall on the front right!\n";
 				// stop the robot
 				n.linear.x = 0;
 				n.linear.z = 0;
@@ -290,8 +295,9 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 			// if the robot has to turn on the right
 			if(n.linear.x == 0 && n.angular.z < 0)
 			{
+				system("clear");
 				// print a warning
-				std::cout << "Wall on the right!";
+				std::cout << "Wall on the right!\n";
 				// stop the robot
 				n.linear.z = 0;
 			}
@@ -303,8 +309,9 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 			// if the robot has to turn on the left
 			if(n.linear.x > 0 && n.angular.z > 0)
 			{
+				system("clear");
 				// print a warning
-				std::cout << "Wall on the front left!";
+				std::cout << "Wall on the front left!\n";
 				// stop the robot
 				n.linear.x = 0;
 				n.linear.z = 0;
@@ -317,8 +324,9 @@ void driveAssist(const sensor_msgs::LaserScan::ConstPtr &m)
 			// if the robot has to turn on the left
 			if(n.linear.x == 0 && n.angular.z > 0)
 			{
+				system("clear");
 				// print a warning
-				std::cout << "Wall on the left!";
+				std::cout << "Wall on the left!\n";
 				// stop the robot
 				n.linear.z = 0;
 			}
@@ -359,6 +367,7 @@ bool setDriveMod (final_assignment::Service::Request &req, final_assignment::Ser
 		case 'm':
 		case 'n':
 		case 'q':
+			cancelGoal();
 			// call the function to drive the robot manually
 			manuallyDrive(req.input);
 			break;
@@ -416,7 +425,7 @@ int main(int argc, char ** argv)
 	ros::Subscriber subV = nh.subscribe("/my_cmd_vel", 1, takeVel);
 	
 	// subscribe to the topic scan to have the value of the laser to avoid obstacles
-	ros::Subscriber subL = nh.subscribe("/base_scan", 1, driveAssist);
+	ros::Subscriber subL = nh.subscribe("/scan", 1, driveAssist);
 	
 	// spin the program
 	ros::spin();
