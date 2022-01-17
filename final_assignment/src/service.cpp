@@ -36,9 +36,6 @@ ros::Publisher pubV;
 // define a variable to publish
 move_base_msgs::MoveBaseActionGoal pose;
 
-// define a variable to publish
-geometry_msgs::PointStamped poseStamped;
-
 // define a string to save the goal id
 std::string goalID;
 
