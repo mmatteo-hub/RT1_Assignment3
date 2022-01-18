@@ -319,7 +319,7 @@ To have a general but complete vision of the code we put also the structure of t
 // request
 char input
 ```
-It is composed only by a request in which it is passed the user choice.
+It is composed only by a request in which it is passed the user choice taken inside the *UI_node* and passed to the *service_node*.
 
 ## Future improvements
 It is a simple structure for the code even if there are many function to manage. A possible improvement can be the possibility of storing the map already seen and make it available in a future simulation to optimize the time to find a path for a goal.
