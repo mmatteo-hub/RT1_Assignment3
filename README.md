@@ -306,7 +306,7 @@ void setPoseParams(float inX, float inY)
 	G = true;
 }
 ```
-We do not put other code here but we explain the meaninf of each function
+We do not put other code here but we explain the meaning of each function
 * takeStatus: used to haved always the position of the robot updated
 * currGoal: used to have stored the input for the goal; it also implements the control for the robot to check if the goal has been reached.
 * takeVel: used to have always the velocity parameters updated;
