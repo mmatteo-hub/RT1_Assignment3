@@ -6,6 +6,7 @@
 ## Running the final code
 To run the code there are few steps to do:
 * install the `xterm` by typing `sudo apt instal xterm`: this is a useful tool which allows us to have multiple console windows opened to run our nodes.
+* switch on the branch `noetic`by typing `git checkout noetic` in order to be able to see the folder `final_assignment` by typing `ls`;
 * type the command to run the final code by typing `roslaunch final_assignment final_assignment.launch` and it can be seen that Gazebo, Rviz and three other windows will be opened (we will explain later their meaning).
 
 ## Goal of the assignmnet
